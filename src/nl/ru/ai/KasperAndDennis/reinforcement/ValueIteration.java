@@ -35,7 +35,7 @@ public class ValueIteration {
 					}
 					nextVs[x][y] = highestValue;
 					double diff = Math.abs(currentVs[x][y] - nextVs[x][y]);
-					if (diff > gamma)
+					if (diff >= gamma)
 						converged = false;
 				}
 			}
