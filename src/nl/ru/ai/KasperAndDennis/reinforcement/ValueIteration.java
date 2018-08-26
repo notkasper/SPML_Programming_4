@@ -8,7 +8,7 @@ import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
 public class ValueIteration {
 
-	public static double[][] valueIteration(MarkovDecisionProblem mdp, double theta, double gamma) {
+	public static void valueIteration(MarkovDecisionProblem mdp, double theta, double gamma) {
 		int width = mdp.getWidth();
 		int height = mdp.getHeight();
 
@@ -44,7 +44,7 @@ public class ValueIteration {
 			nextVs = new double[width][height];
 		}
 		System.out.println("COUNTER: " + counter);
-		return currentVs;
+		displayPolicy(mdp, currentVs, false);
 	}
 
 	private static boolean isTerminalState(MarkovDecisionProblem mdp, int x, int y) {
@@ -90,6 +90,52 @@ public class ValueIteration {
 		actions.put(Action.nextAction(action), sideStepProb / 2);
 		actions.put(Action.backAction(action), backStepProb);
 		return actions;
+	}
+
+	public static void displayPolicy(MarkovDecisionProblem mdp, double[][] array, boolean showValues) {
+		StringBuilder sb = new StringBuilder();
+		int height = array[0].length;
+		int width = array.length;
+		for (int j = height - 1; j >= 0; j--) {
+			sb.append("| ");
+			for (int i = 0; i < width; i++) {
+				if (showValues) {
+					sb.append(String.format("%-5s", array[i][j]));
+				} else {
+					Action bestAction = null;
+					double bestValue = Double.NEGATIVE_INFINITY;
+					Field field = mdp.getField(i, j);
+					if (field == Field.REWARD) {
+						sb.append(String.format("%-5s", "WIN"));
+					} else if (field == Field.NEGREWARD) {
+						sb.append(String.format("%-5s", "DEAD"));
+					} else if (field == Field.OBSTACLE) {
+						sb.append(String.format("%-5s", "[]"));
+					} else {
+						for (Action action : Action.values()) {
+							int dx = Action.getHorizontalChange(action);
+							int dy = Action.getVerticalChange(action);
+							int newX = i + dx;
+							int newY = j + dy;
+							Field nextField = mdp.getField(newX, newY);
+							if (nextField != Field.OUTOFBOUNDS) {
+								double value = array[i + dx][j + dy];
+								if (value > bestValue) {
+									bestValue = value;
+									bestAction = action;
+
+								}
+							}
+						}
+						sb.append(String.format("%-5s", bestAction));
+					}
+
+				}
+				sb.append(" | ");
+			}
+			sb.append("\n");
+		}
+		System.out.println(sb.toString());
 	}
 
 }

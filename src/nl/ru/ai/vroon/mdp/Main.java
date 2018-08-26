@@ -24,24 +24,8 @@ public class Main {
 		mdp.setPosReward(1);
 		mdp.setNegReward(-1);
 		mdp.setDeterministic();
-		double[][] values = ValueIteration.valueIteration(mdp, 0.002, 0.8);
-		displayPolicy(values);
-		QLearning.start(mdp, 1000000, 0.8, 0.5, 0.3);
-	}
-
-	public static void displayPolicy(double[][] array) {
-		StringBuilder sb = new StringBuilder();
-		int height = array[0].length;
-		int width = array.length;
-		for (int j = height - 1; j >= 0; j--) {
-			sb.append("| ");
-			for (int i = 0; i < width; i++) {
-				sb.append(String.format("%-5s", array[i][j]));
-				sb.append(" | ");
-			}
-			sb.append("\n");
-		}
-		System.out.println(sb.toString());
+		ValueIteration.valueIteration(mdp, 0.002, 0.8);
+		// QLearning.start(mdp, 1000000, 0.8, 0.5, 0.3);
 	}
 
 }
