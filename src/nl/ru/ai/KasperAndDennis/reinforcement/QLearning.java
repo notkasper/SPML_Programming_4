@@ -20,6 +20,9 @@ public class QLearning {
 		for (int epoch = 0; epoch < epochs; epoch++) {
 			if (epoch % 50 == 0)
 				System.out.println("epoch: " + epoch);
+			if (epoch % epochs / 2 == 0) {
+				epsilon *= 0.5;
+			}
 			mdp.restart();
 			setStartState(mdp);
 			double cumulativeReward = 0.0;

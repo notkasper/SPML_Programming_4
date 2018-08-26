@@ -15,16 +15,18 @@ public class Main {
 	 * @param args, not used
 	 */
 	public static void main(String[] args) {
-		MarkovDecisionProblem mdp = new MarkovDecisionProblem();
+		MarkovDecisionProblem mdp = new MarkovDecisionProblem(10, 10);
+		mdp.setField(5, 5, Field.REWARD);
+		mdp.setField(2, 3, Field.NEGREWARD);
 		mdp.setWaittime(0);
 		mdp.setInitialState(0, 0);
-		mdp.setShowProgress(true);
+		mdp.setShowProgress(false);
 		mdp.setPosReward(1);
 		mdp.setNegReward(-1);
 		mdp.setDeterministic();
 		double[][] values = ValueIteration.valueIteration(mdp, 0.002, 0.8);
 		displayPolicy(values);
-		QLearning.start(mdp, 300, 0.8, 0.5, 0.3);
+		QLearning.start(mdp, 1000000, 0.8, 0.5, 0.3);
 	}
 
 	public static void displayPolicy(double[][] array) {
