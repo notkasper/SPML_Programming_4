@@ -8,7 +8,7 @@ import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
 public class ValueIteration {
 
-	public static double[][] valueIteration(MarkovDecisionProblem mdp, double gamma, double discount) {
+	public static double[][] valueIteration(MarkovDecisionProblem mdp, double theta, double gamma) {
 		int width = mdp.getWidth();
 		int height = mdp.getHeight();
 
@@ -30,12 +30,12 @@ public class ValueIteration {
 						continue;
 					double highestValue = Double.NEGATIVE_INFINITY;
 					for (Action action : Action.values()) {
-						double qValue = qFunction(mdp, currentVs, x, y, action, discount);
+						double qValue = qFunction(mdp, currentVs, x, y, action, gamma);
 						highestValue = qValue > highestValue ? qValue : highestValue;
 					}
 					nextVs[x][y] = highestValue;
 					double diff = Math.abs(currentVs[x][y] - nextVs[x][y]);
-					if (diff >= gamma)
+					if (diff >= theta)
 						converged = false;
 				}
 			}
