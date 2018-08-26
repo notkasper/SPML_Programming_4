@@ -49,7 +49,7 @@ public class ValueIteration {
 
 	private static boolean isTerminalState(MarkovDecisionProblem mdp, int x, int y) {
 		Field field = mdp.getField(x, y);
-		return field == Field.REWARD || field == Field.NEGREWARD;
+		return field == Field.REWARD || field == Field.NEGREWARD || field == Field.OBSTACLE;
 	}
 
 	private static double qFunction(MarkovDecisionProblem mdp, double[][] Vs, int x, int y, Action actionToTake,
@@ -59,11 +59,11 @@ public class ValueIteration {
 		for (Action action : actionInfo.keySet()) {
 			int nextX = x + Action.getHorizontalChange(action);
 			int nextY = y + Action.getVerticalChange(action);
-			double prob = actionInfo.get(action);
+			double probs = actionInfo.get(action);
 			if (!isWithinBounds(mdp, nextX, nextY)) {
-				sum += prob * (mdp.getRewardForPosition(x, y) + discount * Vs[x][y]);
+				sum += probs * (mdp.getRewardForPosition(x, y) + discount * Vs[x][y]);
 			} else {
-				sum += prob * (mdp.getRewardForPosition(nextX, nextY) + discount * Vs[nextX][nextY]);
+				sum += probs * (mdp.getRewardForPosition(nextX, nextY) + discount * Vs[nextX][nextY]);
 			}
 		}
 		return sum;
@@ -92,45 +92,78 @@ public class ValueIteration {
 		return actions;
 	}
 
-	public static void displayPolicy(MarkovDecisionProblem mdp, double[][] array, boolean showValues) {
+	private static Action getBestAction(MarkovDecisionProblem mdp, int x, int y, double[][] vValues) {
+		Action bestAction = null;
+		double bestValue = Double.NEGATIVE_INFINITY;
+		for (Action action : Action.values()) {
+			int dx = Action.getHorizontalChange(action);
+			int dy = Action.getVerticalChange(action);
+			int nextX = x + dx;
+			int nextY = y + dy;
+			System.out.println(nextX + ":" + nextY);
+			if (isWithinBounds(mdp, nextX, nextY)) {
+				double value = vValues[nextX][nextY];
+				if (mdp.getField(nextX, nextY) == Field.REWARD) {
+					bestAction = action;
+					return bestAction;
+				}
+				if (value > bestValue) {
+					bestAction = action;
+					bestValue = value;
+				}
+			}
+		}
+		return bestAction;
+	}
+
+	private static double getBestValue(MarkovDecisionProblem mdp, int x, int y, double[][] vValues) {
+		double bestValue = Double.NEGATIVE_INFINITY;
+		for (Action action : Action.values()) {
+			int dx = Action.getHorizontalChange(action);
+			int dy = Action.getVerticalChange(action);
+			int nextX = x + dx;
+			int nextY = y + dy;
+			if (isWithinBounds(mdp, nextX, nextY)) {
+				double value = vValues[nextX][nextY];
+				if (value > bestValue) {
+					bestValue = value;
+					if (mdp.getField(nextX, nextY) == Field.REWARD) {
+						return bestValue;
+					}
+				}
+			}
+		}
+		return bestValue;
+	}
+
+	private static void displayPolicy(MarkovDecisionProblem mdp, double[][] array, boolean shouldShowValues) {
 		StringBuilder sb = new StringBuilder();
 		int height = array[0].length;
 		int width = array.length;
-		for (int j = height - 1; j >= 0; j--) {
+		sb.append("Policy: " + '\n');
+		for (int y = height - 1; y >= 0; y--) {
 			sb.append("| ");
-			for (int i = 0; i < width; i++) {
-				if (showValues) {
-					sb.append(String.format("%-5s", array[i][j]));
-				} else {
-					Action bestAction = null;
-					double bestValue = Double.NEGATIVE_INFINITY;
-					Field field = mdp.getField(i, j);
-					if (field == Field.REWARD) {
-						sb.append(String.format("%-5s", "WIN"));
-					} else if (field == Field.NEGREWARD) {
-						sb.append(String.format("%-5s", "DEAD"));
-					} else if (field == Field.OBSTACLE) {
-						sb.append(String.format("%-5s", "[]"));
-					} else {
-						for (Action action : Action.values()) {
-							int dx = Action.getHorizontalChange(action);
-							int dy = Action.getVerticalChange(action);
-							int newX = i + dx;
-							int newY = j + dy;
-							Field nextField = mdp.getField(newX, newY);
-							if (nextField != Field.OUTOFBOUNDS) {
-								double value = array[i + dx][j + dy];
-								if (value > bestValue) {
-									bestValue = value;
-									bestAction = action;
-
-								}
-							}
-						}
-						sb.append(String.format("%-5s", bestAction));
-					}
-
+			for (int x = 0; x < width; x++) {
+				Field field = mdp.getField(x, y);
+				switch (field) {
+				case EMPTY:
+					Action bestAction = getBestAction(mdp, x, y, array);
+					double bestActionValue = Math.round(getBestValue(mdp, x, y, array) * 100.0) / 100.0;
+					sb.append(String.format("%-5s", shouldShowValues ? bestActionValue : bestAction));
+					break;
+				case NEGREWARD:
+					sb.append(String.format("%-5s", "DEAD"));
+					break;
+				case REWARD:
+					sb.append(String.format("%-5s", "WIN"));
+					break;
+				case OBSTACLE:
+					sb.append(String.format("%-5s", "[]"));
+					break;
+				default:
+					break;
 				}
+
 				sb.append(" | ");
 			}
 			sb.append("\n");

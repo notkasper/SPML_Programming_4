@@ -15,9 +15,10 @@ public class Main {
 	 * @param args, not used
 	 */
 	public static void main(String[] args) {
-		MarkovDecisionProblem mdp = new MarkovDecisionProblem(10, 10);
-		mdp.setField(5, 5, Field.REWARD);
-		mdp.setField(2, 3, Field.NEGREWARD);
+		MarkovDecisionProblem mdp = new MarkovDecisionProblem(4, 3);
+		mdp.setField(3, 2, Field.REWARD);
+		mdp.setField(3, 1, Field.NEGREWARD);
+		mdp.setField(1, 1, Field.OBSTACLE);
 		mdp.setWaittime(0);
 		mdp.setInitialState(0, 0);
 		mdp.setShowProgress(false);
