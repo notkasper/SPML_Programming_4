@@ -8,7 +8,7 @@ import javax.swing.JFrame;
  * Most stuff can be set manually to create the MDP desired.
  * 
  * Also contains and updates an agent that can roam around in the MDP.
- * @author Jered Vroon
+ * @author Jered Vroon & Dennis den Hollander (s4776658) & Kasper Karelse (s4794443)
  *
  */
 public class MarkovDecisionProblem {

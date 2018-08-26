@@ -14,7 +14,7 @@ import nl.ru.ai.KasperAndDennis.reinforcement.ValueIteration;
 /**
  * Main class that runs the Markov Decision Problem.
  *
- * @author Dennis den Hollander (s4776658)
+ * @author Dennis den Hollander (s4776658) Kasper Karelse (s4794443)
  */
 public class Main {
 

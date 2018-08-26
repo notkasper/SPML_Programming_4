@@ -8,6 +8,12 @@ import nl.ru.ai.vroon.mdp.Action;
 import nl.ru.ai.vroon.mdp.Field;
 import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
+/**
+ * 
+* @author Dennis den Hollander (s4776658) Kasper Karelse (s4794443)
+ *
+ */
+
 public class QLearning {
 	
 	public QLearning (MarkovDecisionProblem mdp,  int epochs, double discount, double epsilon, double learningRate) {

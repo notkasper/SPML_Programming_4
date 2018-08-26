@@ -5,10 +5,8 @@ import nl.ru.ai.vroon.mdp.Field;
 import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
 /**
- * Variable meanings: DELTA | The threshold of when the program terminates > 0 k
- * | Iteration T | The transition probabilities
  * 
- * @author Dennis den Hollander (s4776658)
+* @author Dennis den Hollander (s4776658) Kasper Karelse (s4794443)
  */
 public class ValueIteration {
 
