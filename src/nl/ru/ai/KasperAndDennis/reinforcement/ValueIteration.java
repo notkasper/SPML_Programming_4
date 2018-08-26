@@ -37,6 +37,8 @@ public class ValueIteration {
 		this.nextStates = new double[WIDTH][HEIGHT];
 		this.currentStates = new double[WIDTH][HEIGHT];
 		valueIteration();
+        System.out.println("Iterations:" + counter);
+        showValues();
 		getPolicy();
 		showPolicy();
 	}
@@ -210,6 +212,23 @@ public class ValueIteration {
 				POLICY[column][row] = !isTerminal(state) ? bestAction(column, row) : null;
 			}
 		}
+	}
+	
+	/**
+	 * print the values
+	 * 
+	 */
+	public void showValues() {
+		StringBuilder string = new StringBuilder();
+		for (int row = HEIGHT - 1; row >= 0; row--) {
+			string.append("| ");
+			for (int column = 0; column < WIDTH; column++) {
+				string.append(String.format("%-5s", currentStates[column][row]));
+				string.append(" | ");
+			}
+			string.append("\n");
+		}
+		System.out.println(string.toString());
 	}
 
 	/**
