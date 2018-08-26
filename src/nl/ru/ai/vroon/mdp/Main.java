@@ -6,7 +6,7 @@ import nl.ru.ai.KasperAndDennis.reinforcement.QLearning;
 /**
  * This main is for testing purposes (and to show you how to use the MDP class).
  * 
- * @author Kasper Karelse & Dennis Hollander
+ * @author Kasper Karelse & Dennis den Hollander
  *
  */
 public class Main {
