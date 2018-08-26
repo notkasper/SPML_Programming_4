@@ -35,11 +35,11 @@ public class Main {
 			switch (command2) {
 			case "1":
 				mdp1.setInitialState(0, 0);
-				new ValueIteration(mdp1, 0.9);
+                                ValueIteration valueIteration1 = new ValueIteration(mdp1, 0.9);
 				break;
 			case "2":
 				mdp1.setDeterministic();
-				new QLearning(mdp1, 300, 0.8, 0.2, 0.2);
+				QLearning qlearning1 = new QLearning(mdp1, 300, 0.8, 0.2, 0.2);
 				break;
 			default:
 				System.out.println("Your type of reinforcement learning has not been found, please try again.");
@@ -58,11 +58,11 @@ public class Main {
 			mdp2.setField(7, 1, Field.OBSTACLE);
 			switch (command2) {
 			case "1":
-				new ValueIteration(mdp2, 0.9);
+				ValueIteration valueIteration2 = new ValueIteration(mdp2, 0.9);
 				break;
 			case "2":
 				mdp2.setDeterministic();
-				new QLearning(mdp2, 1000, 0.8, 0.2, 0.2);
+				QLearning qlearning2 = new QLearning(mdp2, 1000, 0.8, 0.2, 0.2);
 				break;
 			default:
 				System.out.println("Your type of reinforcement learning has not been found, please try again.");
@@ -77,11 +77,11 @@ public class Main {
 			mdp3.setShowProgress(false);
 			switch (command2) {
 			case "1":
-				new ValueIteration(mdp3, 0.9);
+				ValueIteration valueIteration3 = new ValueIteration(mdp3, 0.9);
 				break;
 			case "2":
 				mdp3.setDeterministic();
-				new QLearning(mdp3, 2000, 0.9, 0.2, 0.2);
+				QLearning qlearning3 =new QLearning(mdp3, 2000, 0.9, 0.2, 0.2);
 				break;
 			default:
 				break;
