@@ -1,174 +1,233 @@
 package nl.ru.ai.KasperAndDennis.reinforcement;
 
-import java.util.HashMap;
-
 import nl.ru.ai.vroon.mdp.Action;
 import nl.ru.ai.vroon.mdp.Field;
 import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
+/**
+ * Variable meanings: DELTA | The threshold of when the program terminates > 0 k
+ * | Iteration T | The transition probabilities
+ * 
+ * @author Dennis den Hollander (s4776658)
+ */
 public class ValueIteration {
 
-	public static void valueIteration(MarkovDecisionProblem mdp, double theta, double gamma) {
-		int width = mdp.getWidth();
-		int height = mdp.getHeight();
+	private int counter = 0;
+	private boolean IS_DETERMINISTIC = true;
+	private final double POSREWARD;
+	private final double[] TRANSITION_PROBABILITIES;
+	private static final double DELTA = 1E-10;
+	private final double NEGREWARD;
+	private final double NOREWARD;
+	private final int WIDTH, HEIGHT;
+	private final MarkovDecisionProblem MDP;
+	private final double GAMMA;
+	protected final Action[][] POLICY;
+	private double[][] currentStates;
+	private double[][] nextStates;
 
-		double[][] currentVs = new double[width][height];
-		double[][] nextVs = new double[width][height];
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				// initiate with zeroes
-				currentVs[x][y] = 0;
-			}
-		}
-		boolean converged = false;
-		int counter = 0;
-		while (!converged) {
-			converged = true;
-			for (int x = 0; x < width; x++) {
-				for (int y = 0; y < height; y++) {
-					if (isTerminalState(mdp, x, y))
-						continue;
-					double highestValue = Double.NEGATIVE_INFINITY;
-					for (Action action : Action.values()) {
-						double qValue = qFunction(mdp, currentVs, x, y, action, gamma);
-						highestValue = qValue > highestValue ? qValue : highestValue;
-					}
-					nextVs[x][y] = highestValue;
-					double diff = Math.abs(currentVs[x][y] - nextVs[x][y]);
-					if (diff >= theta)
-						converged = false;
-				}
-			}
+	public ValueIteration(MarkovDecisionProblem mdp, double gamma) {
+		this.GAMMA = gamma;
+		this.MDP = mdp;
+		this.WIDTH = mdp.getWidth();
+		this.HEIGHT = mdp.getHeight();
+		this.POSREWARD = mdp.getRewardVals()[0];
+		this.NEGREWARD = mdp.getRewardVals()[1];
+		this.NOREWARD = mdp.getRewardVals()[2];
+		this.TRANSITION_PROBABILITIES = mdp.getTransitionProbs();
+		this.POLICY = new Action[WIDTH][HEIGHT];
+		this.nextStates = new double[WIDTH][HEIGHT];
+		this.currentStates = new double[WIDTH][HEIGHT];
+		valueIteration();
+		getPolicy();
+		showPolicy();
+	}
+
+	/**
+	 * The Value Iteration algorithm
+	 */
+	public void valueIteration() {
+		IS_DETERMINISTIC = MDP.isDeterministic();
+		boolean hasConverged = false;
+		while (!hasConverged) {
 			counter++;
-			currentVs = nextVs;
-			nextVs = new double[width][height];
-		}
-		System.out.println("COUNTER: " + counter);
-		displayPolicy(mdp, currentVs, false);
-	}
-
-	private static boolean isTerminalState(MarkovDecisionProblem mdp, int x, int y) {
-		Field field = mdp.getField(x, y);
-		return field == Field.REWARD || field == Field.NEGREWARD || field == Field.OBSTACLE;
-	}
-
-	private static double qFunction(MarkovDecisionProblem mdp, double[][] Vs, int x, int y, Action actionToTake,
-			double discount) {
-		HashMap<Action, Double> actionInfo = getTransitionProbabilities(mdp, actionToTake);
-		double sum = 0;
-		for (Action action : actionInfo.keySet()) {
-			int nextX = x + Action.getHorizontalChange(action);
-			int nextY = y + Action.getVerticalChange(action);
-			double probs = actionInfo.get(action);
-			if (!isWithinBounds(mdp, nextX, nextY)) {
-				sum += probs * (mdp.getRewardForPosition(x, y) + discount * Vs[x][y]);
-			} else {
-				sum += probs * (mdp.getRewardForPosition(nextX, nextY) + discount * Vs[nextX][nextY]);
-			}
-		}
-		return sum;
-	}
-
-	private static boolean isWithinBounds(MarkovDecisionProblem mdp, int x, int y) {
-		int width = mdp.getWidth();
-		int height = mdp.getHeight();
-		boolean withinBoundsX = x >= 0 && x < width;
-		boolean withinBoundsY = y >= 0 && y < height;
-		boolean withinBounds = withinBoundsX && withinBoundsY;
-		return withinBounds;
-	}
-
-	private static HashMap<Action, Double> getTransitionProbabilities(MarkovDecisionProblem mdp, Action action) {
-		boolean isDeterministic = mdp.isDeterministic();
-		double forwardStepProb = isDeterministic ? 1 : mdp.getForwardStepProb();
-		double sideStepProb = isDeterministic ? 0 : mdp.getSideStepProb();
-		double backStepProb = isDeterministic ? 0 : mdp.getBackStepProb();
-
-		HashMap<Action, Double> actions = new HashMap<Action, Double>();
-		actions.put(action, forwardStepProb);
-		actions.put(Action.previousAction(action), sideStepProb / 2);
-		actions.put(Action.nextAction(action), sideStepProb / 2);
-		actions.put(Action.backAction(action), backStepProb);
-		return actions;
-	}
-
-	private static Action getBestAction(MarkovDecisionProblem mdp, int x, int y, double[][] vValues) {
-		Action bestAction = null;
-		double bestValue = Double.NEGATIVE_INFINITY;
-		for (Action action : Action.values()) {
-			int dx = Action.getHorizontalChange(action);
-			int dy = Action.getVerticalChange(action);
-			int nextX = x + dx;
-			int nextY = y + dy;
-			System.out.println(nextX + ":" + nextY);
-			if (isWithinBounds(mdp, nextX, nextY)) {
-				double value = vValues[nextX][nextY];
-				if (mdp.getField(nextX, nextY) == Field.REWARD) {
-					bestAction = action;
-					return bestAction;
+			for (int row = 0; row < WIDTH; row++) {
+				for (int col = 0; col < HEIGHT; col++) {
+					Field field = MDP.getField(row, col);
+					if (isTerminal(field)) {
+						continue;
+					}
+					int[] state = { row, col };
+					nextStates[row][col] = getMaxQ(state);
+					hasConverged = Math.abs(nextStates[row][col] - currentStates[row][col]) < DELTA;
 				}
-				if (value > bestValue) {
+			}
+			currentStates = nextStates;
+			nextStates = new double[WIDTH][HEIGHT];
+		}
+	}
+
+	protected boolean isTerminal(Field field) {
+		return field == Field.REWARD || field == Field.NEGREWARD;
+	}
+
+	/**
+	 * Finds the maximum Q value for all Actions
+	 * 
+	 * @param state x and y coordinate
+	 * @return maximum Q value for a state
+	 */
+	protected double getMaxQ(int[] state) {
+		double maxValue = Double.NEGATIVE_INFINITY;
+		for (Action action : Action.values()) {
+			double currentValue = qFunction(state, action);
+			maxValue = (currentValue > maxValue) ? currentValue : maxValue;
+		}
+		return maxValue;
+	}
+
+	protected Action bestAction(int x, int y) {
+		double maxValue = Double.NEGATIVE_INFINITY;
+		Action bestAction = null;
+		for (Action action : Action.values()) {
+			if (invalidAction(x, y, action)) {
+				double val = currentStates[x][y];
+				if (val > maxValue) {
+					maxValue = val;
 					bestAction = action;
-					bestValue = value;
+				}
+			} else {
+				int dx = action.GetDX();
+				int dy = action.GetDY();
+				Field field = MDP.getField(x + dx, y + dy);
+				double val = (field == Field.REWARD) ? POSREWARD + 1E-6
+						: ((field == Field.NEGREWARD) ? NEGREWARD - 1E-6 : currentStates[x + dx][y + dy]);
+				if (val > maxValue) {
+					maxValue = val;
+					bestAction = action;
 				}
 			}
 		}
 		return bestAction;
 	}
 
-	private static double getBestValue(MarkovDecisionProblem mdp, int x, int y, double[][] vValues) {
-		double bestValue = Double.NEGATIVE_INFINITY;
-		for (Action action : Action.values()) {
-			int dx = Action.getHorizontalChange(action);
-			int dy = Action.getVerticalChange(action);
-			int nextX = x + dx;
-			int nextY = y + dy;
-			if (isWithinBounds(mdp, nextX, nextY)) {
-				double value = vValues[nextX][nextY];
-				if (value > bestValue) {
-					bestValue = value;
-					if (mdp.getField(nextX, nextY) == Field.REWARD) {
-						return bestValue;
-					}
-				}
-			}
-		}
-		return bestValue;
-	}
-
-	private static void displayPolicy(MarkovDecisionProblem mdp, double[][] array, boolean shouldShowValues) {
+	@Override
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		int height = array[0].length;
-		int width = array.length;
-		sb.append("Policy: " + '\n');
-		for (int y = height - 1; y >= 0; y--) {
+		for (int row = HEIGHT; row > 0; row--) {
 			sb.append("| ");
-			for (int x = 0; x < width; x++) {
-				Field field = mdp.getField(x, y);
-				switch (field) {
-				case EMPTY:
-					Action bestAction = getBestAction(mdp, x, y, array);
-					double bestActionValue = Math.round(getBestValue(mdp, x, y, array) * 100.0) / 100.0;
-					sb.append(String.format("%-5s", shouldShowValues ? bestActionValue : bestAction));
-					break;
-				case NEGREWARD:
-					sb.append(String.format("%-5s", "DEAD"));
-					break;
-				case REWARD:
-					sb.append(String.format("%-5s", "WIN"));
-					break;
-				case OBSTACLE:
-					sb.append(String.format("%-5s", "[]"));
-					break;
-				default:
-					break;
-				}
-
+			for (int column = 0; column < WIDTH; column++) {
+				sb.append(String.format("%f", currentStates[column][row]));
 				sb.append(" | ");
 			}
 			sb.append("\n");
 		}
-		System.out.println(sb.toString());
+		sb.append(String.format("number of epochs: ", counter));
+		return sb.toString();
 	}
 
+	/**
+	 * Computes the Q-values for a state and action pair.
+	 * 
+	 * @param state  state composed of x and y coordinate
+	 * @param action action
+	 * @return Q-value
+	 */
+	private double qFunction(int[] state, Action action) {
+		int x = state[0];
+		int y = state[1];
+		double[] transition = getTransitionProbabilities();
+		Action[] actions = new Action[] { action, Action.nextAction(action), Action.previousAction(action),
+				Action.backAction(action) };
+		double sum = 0;
+		for (int i = 0; i < actions.length; i++) {
+			int dx = actions[i].GetDX();
+			int dy = actions[i].GetDY();
+			if (invalidAction(x, y, actions[i])) {
+				Field field = MDP.getField(x, y);
+				sum += transition[i] * (getReward(field) + GAMMA * currentStates[x][y]);
+			} else {
+				Field field = MDP.getField(x + dx, y + dy);
+				sum += transition[i] * (getReward(field) + GAMMA * currentStates[x + dx][y + dy]);
+			}
+		}
+		return sum;
+	}
+
+	/**
+	 * Note: pNoStep is not used in this function, because the agent always moves!
+	 * 
+	 * @param isDeterministic
+	 * @return
+	 */
+	private double[] getTransitionProbabilities() {
+		double stepProb = TRANSITION_PROBABILITIES[0];
+		double sideStepProb = TRANSITION_PROBABILITIES[1];
+		double backStepProb = TRANSITION_PROBABILITIES[2];
+		return IS_DETERMINISTIC ? new double[] { 1, 0, 0, 0 }
+				: new double[] { stepProb, sideStepProb / 2, sideStepProb / 2, backStepProb };
+	}
+
+	/**
+	 * checks if an action is valid
+	 * 
+	 * @param x      x coordinate
+	 * @param y      y coordinate
+	 * @param action action
+	 * @return true if action cannot be performed
+	 */
+	private boolean invalidAction(int x, int y, Action action) {
+		int dx = action.GetDX();
+		int dy = action.GetDY();
+		return (y + dy < 0 || y + dy >= HEIGHT) || (x + dx < 0 || x + dx >= WIDTH)
+				|| (MDP.getField(x + dx, y + dy) == Field.OBSTACLE);
+	}
+
+	/**
+	 * Gets the reward of the state.
+	 *
+	 * @param field
+	 * @return reward
+	 */
+	private double getReward(Field field) {
+		switch (field) {
+		case REWARD:
+			return POSREWARD;
+		case NEGREWARD:
+			return NEGREWARD;
+		case EMPTY:
+			return NOREWARD;
+		default:
+			return 0;
+		}
+	}
+
+	/**
+	 * Get the best action for every state
+	 */
+	public void getPolicy() {
+		for (int column = 0; column < WIDTH; column++) {
+			for (int row = 0; row < HEIGHT; row++) {
+				Field state = MDP.getField(column, row);
+				POLICY[column][row] = !isTerminal(state) ? bestAction(column, row) : null;
+			}
+		}
+	}
+
+	/**
+	 * print the policy
+	 * 
+	 */
+	public void showPolicy() {
+		StringBuilder string = new StringBuilder();
+		for (int row = HEIGHT - 1; row >= 0; row--) {
+			string.append("| ");
+			for (int column = 0; column < WIDTH; column++) {
+				string.append(String.format("%-5s", POLICY[column][row]));
+				string.append(" | ");
+			}
+			string.append("\n");
+		}
+		System.out.println(string.toString());
+	}
 }

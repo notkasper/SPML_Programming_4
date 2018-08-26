@@ -9,6 +9,10 @@ import nl.ru.ai.vroon.mdp.Field;
 import nl.ru.ai.vroon.mdp.MarkovDecisionProblem;
 
 public class QLearning {
+	
+	public QLearning (MarkovDecisionProblem mdp,  int epochs, double discount, double epsilon, double learningRate) {
+		start(mdp, epochs, discount, epsilon, learningRate);
+	}
 
 	public static void start(MarkovDecisionProblem mdp, int epochs, double discount, double epsilon,
 			double learningRate) {
@@ -28,13 +32,13 @@ public class QLearning {
 			double cumulativeReward = 0.0;
 			while (!mdp.isTerminated()) {
 				int oldX = mdp.getStateXPosition();
-				int oldY = mdp.getStateYPostion();
+				int oldY = mdp.getStateYPosition();
 				Action action = chooseAction(mdp, epsilon, qValues);
 				double reward = mdp.performAction(action);
 				cumulativeReward += reward;
 				double oldQValue = qValues[oldX][oldY].get(action);
 				int newX = mdp.getStateXPosition();
-				int newY = mdp.getStateYPostion();
+				int newY = mdp.getStateYPosition();
 				Action bestAction = getBestAction(qValues[newX][newY]);
 				double bestActionValue = qValues[newX][newY].get(bestAction);
 				double newQValue = oldQValue + learningRate * (reward + discount * bestActionValue - oldQValue);
@@ -62,7 +66,7 @@ public class QLearning {
 
 	private static Action greedyActionChooser(MarkovDecisionProblem mdp, HashMap<Action, Double>[][] qValues) {
 		int x = mdp.getStateXPosition();
-		int y = mdp.getStateYPostion();
+		int y = mdp.getStateYPosition();
 		HashMap<Action, Double> actionValuePairs = qValues[x][y];
 		Action bestAction = getBestAction(actionValuePairs);
 		return bestAction;

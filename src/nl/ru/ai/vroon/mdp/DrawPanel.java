@@ -53,7 +53,7 @@ public class DrawPanel extends JPanel {
 				} 
 				g2.fillRect(stepSizeX*i, screenHeight - stepSizeY*(j+1), stepSizeX,stepSizeY);
 				
-				if ( mdp.getStateXPosition() == i && mdp.getStateYPostion() == j ) {
+				if ( mdp.getStateXPosition() == i && mdp.getStateYPosition() == j ) {
 					g2.setPaint(Color.BLUE);
 					g2.fillOval(stepSizeX*i+stepSizeX/4, screenHeight - stepSizeY*(j+1)+stepSizeY/4, stepSizeX/2, stepSizeY/2);
 				}
